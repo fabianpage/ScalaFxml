@@ -90,6 +90,13 @@ class ScalaFxmlTranslatorSpec2 extends org.specs2.Specification with ScalaFxmlTr
   "height" ! checkProperty("prefHeight", 412.3) ^
   "width" ! checkProperty("prefWidth", 300.0) ^
   p^
+  "String properties" ^
+  "id" ! checkProperty("id", "theButton") ^
+  "text" ! checkProperty("text", "someText") ^
+  "style" ! checkProperty("style", "someStyle") ^
+  p^
+  "Boolean properties" ^
+  "mnemonicParsing" ! checkProperty("mnemonicParsing", false)
   "Panes" ^
   "AnchorPane" ! checkDoublePane("AnchorPane", "bottomAnchor", 0.0) ^
   "BorderPane" ! checkAlignmentPane("BorderPane", "alignment", "CENTER") ^
