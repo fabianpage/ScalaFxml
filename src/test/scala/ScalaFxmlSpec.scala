@@ -1,6 +1,6 @@
 package com.github.nuriaion.test
 
-import com.github.nuriaion.{ScalaFxmlTranslator, ScalaFxmlReader, Element}
+import com.github.nuriaion.{ScalaFxmlElement, ScalaFxmlTranslator, ScalaFxmlReader}
 import org.jcp.xml.dsig.internal.dom.DOMTransform
 import org.specs2.matcher.MatchResult
 
@@ -18,11 +18,11 @@ import org.specs2.matcher.MatchResult
   describe("A ScalaFxmlReader") {
     it("should parse a flat xml") {
       val fxml = <AnchorPane ></AnchorPane>
-      simplifyXml(fxml) should equal(Element("AnchorPane", Nil, Nil))
+      xmlToElement(fxml) should equal(Element("AnchorPane", Nil, Nil))
     }
     it("should parse some properties") {
       val fxml = <AnchorPane prefHeight="400.0" prefWidth="600.0"></AnchorPane>
-      simplifyXml(fxml) should equal(
+      xmlToElement(fxml) should equal(
         Element("AnchorPane",
           Seq(
             ("prefHeight","400.0"),
@@ -30,7 +30,7 @@ import org.specs2.matcher.MatchResult
     }
     it("should parse a child") {
       val fxml = <AnchorPane><children><BorderPane></BorderPane></children></AnchorPane>
-      simplifyXml(fxml) should equal(Element("AnchorPane", Nil,
+      xmlToElement(fxml) should equal(Element("AnchorPane", Nil,
         Seq(("children",Seq(Element("BorderPane", Nil, Nil))))))
     }
   }
@@ -54,7 +54,7 @@ import org.specs2.matcher.MatchResult
 
 class ScalaFxmlReaderSpecS
   extends org.specs2.Specification
-  with ScalaFxmlReader { def is =
+  with ScalaFxmlReader with ScalaFxmlElement { def is =
   "A ScalaFxmlReader" ^
   "should parse a flat xml" ! checkFlatXml ^
   "should parse some properties" ! parseSomeProperties ^
@@ -63,12 +63,12 @@ class ScalaFxmlReaderSpecS
 
   def checkFlatXml = {
     val fxml = <AnchorPane ></AnchorPane>
-    simplifyXml(fxml) === (Element("AnchorPane", Nil, Nil))
+    xmlToElement(fxml) === (Element("AnchorPane", Nil, Nil))
   }
 
   def parseSomeProperties =  {
     val fxml = <AnchorPane prefHeight="400.0" prefWidth="600.0"></AnchorPane>
-    simplifyXml(fxml) === (
+    xmlToElement(fxml) === (
       Element("AnchorPane",
         Seq(
           ("prefHeight","400.0"),
@@ -77,13 +77,13 @@ class ScalaFxmlReaderSpecS
 
   def parseAChild = {
     val fxml = <AnchorPane><children><BorderPane></BorderPane></children></AnchorPane>
-    simplifyXml(fxml) === (Element("AnchorPane", Nil,
+    xmlToElement(fxml) === (Element("AnchorPane", Nil,
       Seq(("children",Seq(Element("BorderPane", Nil, Nil))))))
   }
 }
 
 
-class ScalaFxmlTranslatorSpec2 extends org.specs2.Specification with ScalaFxmlTranslator { def is =
+class ScalaFxmlTranslatorSpec2 extends org.specs2.Specification with ScalaFxmlTranslator with ScalaFxmlElement { def is =
   "This is a specification to check the ScalaFxmlTranslator" ^
   p^
   "Double properties" ^

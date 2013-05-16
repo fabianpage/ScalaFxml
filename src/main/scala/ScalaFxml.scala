@@ -12,21 +12,22 @@ package com.github.nuriaion
 
 import scala.xml.Elem
 
-case class Element(label: String, attr:Seq[(String, String)] = Nil, sub:Seq[(String, Seq[Element])] = Nil) {
-  //val name:String = attr.find{case (id, _) => id == "fx:id"}.getOrElse(("",label + "_" + scala.util.Random.alphanumeric))._2
-  //println(s"label: $label")
-  if (label.contains("PCDATA")) {
-    println(s"Strange Element!!!!!: $this")
-  }
-  val name:String = {
-    val tmp: Option[(String, String)] = attr.find{case (id, _) => id == "fx:id"}
-    val tmp2: (String, String) = tmp.getOrElse(("Z", "gen_" + label + "_" + scala.util.Random.alphanumeric ))
-    tmp2._2
+trait ScalaFxmlElement {
+  case class Element(label: String, attr:Seq[(String, String)] = Nil, sub:Seq[(String, Seq[Element])] = Nil) {
+    if (label.contains("PCDATA")) {
+      println(s"Strange Element!!!!!: $this")
+    }
+    val name:String = {
+      val tmp: Option[(String, String)] = attr.find{case (id, _) => id == "fx:id"}
+      val tmp2: (String, String) = tmp.getOrElse(("", "gen_" + label + "_" + scala.util.Random.alphanumeric ))
+      tmp2._2
+    }
   }
 }
 
-trait ScalaFxmlReader {
+trait ScalaFxmlReader { self: ScalaFxmlElement =>
   import xml._
+
 
 
   def parse(fxml:String):xml.Elem = {
@@ -34,7 +35,7 @@ trait ScalaFxmlReader {
     x
   }
 
-  def simplifyXml(s:xml.Node):Element = {
+  def xmlToElement(s:xml.Node):Element = {
     def filterElem: (Node) => Boolean = {
       _ match {
         case e: Elem => true
@@ -47,14 +48,14 @@ trait ScalaFxmlReader {
     val label = s.label
     val attr = s.attributes.asAttrMap.toList
     val subElements: Seq[(String, Seq[Element])] = childs.map{ c =>
-      (c.label, c.child.filter{filterElem}.map {e => simplifyXml(e)})
+      (c.label, c.child.filter{filterElem}.map {e => xmlToElement(e)})
     }
 
     Element(label, attr, subElements)
   }
 }
 
-trait ScalaFxmlTranslator {
+trait ScalaFxmlTranslator { self: ScalaFxmlElement =>
 
   import treehugger.forest._
   import definitions._
@@ -161,45 +162,7 @@ trait ScalaFxmlTranslator {
   }
 }
 
-object ScalaFxml extends App with ScalaFxmlReader with ScalaFxmlTranslator{
-
-
-
-
-  /*trait Attribute[T] {
-    type T
-    def id: String
-    def value: T
-    def tree: Tree
-  }
-  case class IntAttribute(id: String, value: Int) extends Attribute {
-    val tree = REF(id) := LIT(value)
-  }*/
-
-  /*
-
-  def parseAttribute(attr:List[(String, String)]): List[Nothing] = {
-    def p(id:String, value:String):Option[Tree] = {
-      (id, value) match {
-        case (i,v) if(i.toLowerCase.contains("height")) => {
-          Some(genAttribute(id,value))
-        }
-        case _ => None
-      }
-    }
-    //val temp: List[Option[Tree]] = attr.map(case (i,v) => parseAttribute(i,v))
-    //temp
-    Nil
-  }
-
-  case class Attribute[T](id: String, value: Int) {
-    val tree = REF(id) := LIT(value)
-  }
-
-  case class NodeN(_name: Option[String], klass:String, attr:List[Attribute[_]], childs:List[NodeN])*/
-
-
-
+object ScalaFxml extends App with ScalaFxmlReader with ScalaFxmlTranslator with ScalaFxmlElement{
 
   val fxml: String = """<?xml version="1.0" encoding="UTF-8"?>
 <?import java.lang.*?>
@@ -228,14 +191,14 @@ object ScalaFxml extends App with ScalaFxmlReader with ScalaFxmlTranslator{
   val pars: Elem = parse(fxml)
   //println(s"pars:\n$pars")
 
-  val sim = simplifyXml(pars)
+  val sim = xmlToElement(pars)
   // wo kommt das #pcdata her?
   println(s"sim:\n$sim")
 
   println("Hallo")
   println(s"atr:\n${attr(sim.attr).map(treeToString(_))}")
 
-  println("\n\n\n")
+  println("\n\n\nborderPlate:")
   println(treeToString(borderPlate("ScalaFxml", sim)))
 
 
