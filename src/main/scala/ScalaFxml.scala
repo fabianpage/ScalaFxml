@@ -10,6 +10,8 @@
 
 package com.github.nuriaion
 
+import scala.xml.Elem
+
 case class Element(label: String, attr:Seq[(String, String)] = Nil, sub:Seq[(String, Seq[Element])] = Nil) {
   //val name:String = attr.find{case (id, _) => id == "fx:id"}.getOrElse(("",label + "_" + scala.util.Random.alphanumeric))._2
   //println(s"label: $label")
@@ -19,14 +21,12 @@ case class Element(label: String, attr:Seq[(String, String)] = Nil, sub:Seq[(Str
   val name:String = {
     val tmp: Option[(String, String)] = attr.find{case (id, _) => id == "fx:id"}
     val tmp2: (String, String) = tmp.getOrElse(("Z", "gen_" + label + "_" + scala.util.Random.alphanumeric ))
-    //println(s"tmpppp: $tmp, $tmp2")
-    //"HUHUHU"
     tmp2._2
   }
 }
 
 trait ScalaFxmlReader {
-  import xml.Node
+  import xml._
 
 
   def parse(fxml:String):xml.Elem = {
@@ -35,10 +35,22 @@ trait ScalaFxmlReader {
   }
 
   def simplifyXml(s:xml.Node):Element = {
-    //WTF is #PCDATA?
-    val childs: Seq[(String, Seq[Node])] = s.child.map{(c: Node) => (c.label,c.child)}.filter(!_._1.contains("#PCDATA"))
-    println(s"childs: $childs")
-    Element(s.label, s.attributes.asAttrMap.toList, childs.map(c => c.copy(_2 = c._2.map(simplifyXml(_)))/*s.child.map(simplifyXml(_)*/))
+    def filterElem: (Node) => Boolean = {
+      _ match {
+        case e: Elem => true
+        case _ => false
+      }
+    }
+
+    val childs: Seq[Node] = s.child.filter { filterElem}
+
+    val label = s.label
+    val attr = s.attributes.asAttrMap.toList
+    val subElements: Seq[(String, Seq[Element])] = childs.map{ c =>
+      (c.label, c.child.filter{filterElem}.map {e => simplifyXml(e)})
+    }
+
+    Element(label, attr, subElements)
   }
 }
 
@@ -213,8 +225,8 @@ object ScalaFxml extends App with ScalaFxmlReader with ScalaFxmlTranslator{
   import definitions._
   import treehuggerDSL._
 
-  val pars = parse(fxml)
-  println(s"pars:\n$pars")
+  val pars: Elem = parse(fxml)
+  //println(s"pars:\n$pars")
 
   val sim = simplifyXml(pars)
   // wo kommt das #pcdata her?
@@ -225,4 +237,7 @@ object ScalaFxml extends App with ScalaFxmlReader with ScalaFxmlTranslator{
 
   println("\n\n\n")
   println(treeToString(borderPlate("ScalaFxml", sim)))
+
+
+
 }

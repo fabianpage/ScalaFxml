@@ -11,7 +11,7 @@ import org.specs2.matcher.MatchResult
  * Time: 15:49
  * To change this template use File | Settings | File Templates.
  */
-class ScalaFxmlReaderSpec
+/**class ScalaFxmlReaderSpec
   extends org.scalatest.FunSpec
   with org.scalatest.matchers.ShouldMatchers
   with ScalaFxmlReader{
@@ -34,7 +34,7 @@ class ScalaFxmlReaderSpec
         Seq(("children",Seq(Element("BorderPane", Nil, Nil))))))
     }
   }
-}
+}   */
 
 /*class ScalaFxmlTranslatorSpec extends FunSpec with ShouldMatchers with ScalaFxmlTranslator {
   import treehugger.forest._
@@ -52,8 +52,38 @@ class ScalaFxmlReaderSpec
 }               */
 
 
+class ScalaFxmlReaderSpecS
+  extends org.specs2.Specification
+  with ScalaFxmlReader { def is =
+  "A ScalaFxmlReader" ^
+  "should parse a flat xml" ! checkFlatXml ^
+  "should parse some properties" ! parseSomeProperties ^
+  "should parse a child" ! parseAChild ^
+  end
 
-class ScalaFxmlTranslatorSpec2 extends org.specs2.Specification with ScalaFxmlTranslator { def is = sequential ^
+  def checkFlatXml = {
+    val fxml = <AnchorPane ></AnchorPane>
+    simplifyXml(fxml) === (Element("AnchorPane", Nil, Nil))
+  }
+
+  def parseSomeProperties =  {
+    val fxml = <AnchorPane prefHeight="400.0" prefWidth="600.0"></AnchorPane>
+    simplifyXml(fxml) === (
+      Element("AnchorPane",
+        Seq(
+          ("prefHeight","400.0"),
+          ("prefWidth", "600.0")), Nil))
+  }
+
+  def parseAChild = {
+    val fxml = <AnchorPane><children><BorderPane></BorderPane></children></AnchorPane>
+    simplifyXml(fxml) === (Element("AnchorPane", Nil,
+      Seq(("children",Seq(Element("BorderPane", Nil, Nil))))))
+  }
+}
+
+
+class ScalaFxmlTranslatorSpec2 extends org.specs2.Specification with ScalaFxmlTranslator { def is =
   "This is a specification to check the ScalaFxmlTranslator" ^
   p^
   "Double properties" ^
