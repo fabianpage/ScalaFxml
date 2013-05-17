@@ -89,14 +89,17 @@ class ScalaFxmlTranslatorSpec2 extends org.specs2.Specification with ScalaFxmlTr
   "Double properties" ^
   "height" ! checkProperty("prefHeight", 412.3) ^
   "width" ! checkProperty("prefWidth", 300.0) ^
+  "-Infinity" ! checkNoProprty("minHeight", "-Infinity") ^
+  "-Infinity" ! checkNoProprty("minWidth", "-Infinity") ^
   p^
   "String properties" ^
-  "id" ! checkProperty("id", "theButton") ^
+  "id" ! checkProperty("fx:id", "theButton") ^
   "text" ! checkProperty("text", "someText") ^
   "style" ! checkProperty("style", "someStyle") ^
   p^
   "Boolean properties" ^
-  "mnemonicParsing" ! checkProperty("mnemonicParsing", false)
+  "mnemonicParsing" ! checkProperty("mnemonicParsing", false) ^
+  p^
   "Panes" ^
   "AnchorPane" ! checkDoublePane("AnchorPane", "bottomAnchor", 0.0) ^
   "BorderPane" ! checkAlignmentPane("BorderPane", "alignment", "CENTER") ^
@@ -114,6 +117,10 @@ class ScalaFxmlTranslatorSpec2 extends org.specs2.Specification with ScalaFxmlTr
   import treehugger.forest._
   import definitions._
   import treehuggerDSL._
+
+  def checkNoProprty[T](id:String, value:T) = {
+    (attr(Seq((id, value.toString))):Seq[Tree]).map(treeToString(_)) === Nil
+  }
 
   def checkProperty[T](id:String, value:T) = {
     (attr(Seq((id, value.toString))):Seq[Tree]).map(treeToString(_)) ===
