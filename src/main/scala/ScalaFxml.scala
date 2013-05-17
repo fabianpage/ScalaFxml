@@ -13,7 +13,7 @@ package com.github.nuriaion
 trait ScalaFxmlElement {
   case class Element(label: String, attr:Seq[(String, String)] = Nil, sub:Seq[(String, Seq[Element])] = Nil) {
     if (label.contains("PCDATA")) {
-      println(s"Strange Element!!!!!: $this")
+      //println(s"Strange Element!!!!!: $this")
     }
     val name:String = {
       val tmp: Option[(String, String)] = attr.find{case (id, _) => id == "fx:id"}
@@ -139,20 +139,20 @@ trait ScalaFxmlTranslator { self: ScalaFxmlElement =>
     }
 
     def translate(identifier:String, value: String):Option[Tree] = {
-      println(s"translate id:$identifier, value: $value")
+     // println(s"translate id:$identifier, value: $value")
       (identifier, value) match {
         case (DoubleName(id), D(d)) => {
-          println(s"double, id:$id, d:$d, d.class:${d.getClass}")
+          //println(s"double, id:$id, d:$d, d.class:${d.getClass}")
           Some(genAttribute(id, d))
         }
         case (StringName(id), s) => {
-          println(s"string, id:$id, s:$s")
+          //println(s"string, id:$id, s:$s")
           Some(genAttribute(id, s))
         }
         case (BoolName(id), Bool(b))  => Some(genAttribute(id, b))
         case (DoublePane(id), D(d)) => Some(genDoublePaneCall(id, d))
         case (AlignmentPane(id), AlignmentAttr(a)) => Some(genAlignmentPaneCall(id, a))
-        case x => {println(s"HUUUUUUUUUUUUU $x");None}
+        case x => {println("HUUUUUUUUUUUUU " + x);None}
       }
 
     }
@@ -251,13 +251,13 @@ object ScalaFxml extends App with ScalaFxmlReader with ScalaFxmlTranslator with 
 
   val sim = xmlToElement(pars)
   // wo kommt das #pcdata her?
-  println(s"sim:\n$sim")
+  //println(s"sim:\n$sim")
 
-  println("Hallo")
-  println(s"atr:\n${attr(sim.attr).map(treeToString(_))}")
+  //println("Hallo")
+  //println(s"atr:\n${attr(sim.attr).map(treeToString(_))}")
 
-  println("\n\n\n!!!!!!!!!!!!!!!borderPlate:")
-  println(treeToString(borderPlate("ScalaFxml", sim)))
+  //println("\n\n\n!!!!!!!!!!!!!!!borderPlate:")
+  //println(treeToString(borderPlate("ScalaFxml", sim)))
 
 
 
