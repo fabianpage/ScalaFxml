@@ -92,8 +92,10 @@ trait ScalaFxmlTranslator { self: ScalaFxmlElement =>
     }
 
     abstract class NaNa {
+      val idTransformer = Map("fx:id" -> "id")
+      def trans = {s:String => idTransformer.getOrElse(s,s)}
       def genUnapply(names:List[String]):(String => Option[String]) = { s =>
-        if(checkString(s, names)) Some(s) else None
+        if(checkString(s, names)) Some(trans(s)) else None
       }
     }
     object DoubleName extends NaNa{
@@ -140,6 +142,8 @@ trait ScalaFxmlTranslator { self: ScalaFxmlElement =>
 
     def translate(identifier:String, value: String):Option[Tree] = {
      // println(s"translate id:$identifier, value: $value")
+
+      //println("trans: " + identifier + ", " + idTransformer.getOrElse(identifier, identifier))
       (identifier, value) match {
         case (DoubleName(id), D(d)) => {
           //println(s"double, id:$id, d:$d, d.class:${d.getClass}")
@@ -212,14 +216,21 @@ trait ScalaFxmlTranslator { self: ScalaFxmlElement =>
   }
 
   def borderPlate(s:String, e:Element):Tree = {
-
-    TRAITDEF(s) := BLOCK (
-      unroll(e)
+    PACKAGE("blub") := BLOCK (
+      TRAITDEF(s) := BLOCK (
+        unroll(e)
+      )
     )
   }
+
+  def elementToString(pkg:String, elem:Element):String = treeToString(borderPlate(pkg, elem))
 }
 
-object ScalaFxml extends App with ScalaFxmlReader with ScalaFxmlTranslator with ScalaFxmlElement{
+object ScalaFxml extends ScalaFxmlReader with ScalaFxmlTranslator with ScalaFxmlElement {}
+
+object ScalaFxmlApp extends App{
+
+  import ScalaFxml._
 
   val fxml: String = """<?xml version="1.0" encoding="UTF-8"?>
 <?import java.lang.*?>
@@ -257,7 +268,9 @@ object ScalaFxml extends App with ScalaFxmlReader with ScalaFxmlTranslator with 
   //println(s"atr:\n${attr(sim.attr).map(treeToString(_))}")
 
   //println("\n\n\n!!!!!!!!!!!!!!!borderPlate:")
-  //println(treeToString(borderPlate("ScalaFxml", sim)))
+  
+  println(elementToString("ScalaFxml", sim))
+
 
 
 

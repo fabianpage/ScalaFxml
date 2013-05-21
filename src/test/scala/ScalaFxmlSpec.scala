@@ -93,7 +93,7 @@ class ScalaFxmlTranslatorSpec2 extends org.specs2.Specification with ScalaFxmlTr
   "-Infinity" ! checkNoProprty("minWidth", "-Infinity") ^
   p^
   "String properties" ^
-  "id" ! checkProperty("fx:id", "theButton") ^
+  "id" ! checkChangingProperty("fx:id", "id", "theButton") ^
   "text" ! checkProperty("text", "someText") ^
   "style" ! checkProperty("style", "someStyle") ^
   p^
@@ -125,6 +125,11 @@ class ScalaFxmlTranslatorSpec2 extends org.specs2.Specification with ScalaFxmlTr
   def checkProperty[T](id:String, value:T) = {
     (attr(Seq((id, value.toString))):Seq[Tree]).map(treeToString(_)) ===
       (Seq(REF(id) := LIT(value)):Seq[Tree]).map(treeToString(_))
+  }
+
+  def checkChangingProperty[T](oldId:String, newId:String, value:T) = {
+    (attr(Seq((oldId, value.toString))):Seq[Tree]).map(treeToString(_)) ===
+      (Seq(REF(newId) := LIT(value)):Seq[Tree]).map(treeToString(_))
   }
 
   def checkDoublePane(klass:String, function:String, value:Double) = {
