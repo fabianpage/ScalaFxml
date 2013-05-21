@@ -173,10 +173,13 @@ trait ScalaFxmlTranslator { self: ScalaFxmlElement =>
   }
 
   def subElement(name:String, sub:Seq[String]):Option[Tree] = {
-    val singles = List("top", "bottom", "left", "right")
+    val singles = List("top", "bottom", "left", "right", "center")
     (name, sub) match {
       case ("children", sub) => Some(genChildrensRef(sub))
-      case (name, s :: Nil) if(singles.contains(name)) => Some(genChildrenRef(name, s))
+      case (name, s :: Nil) if(singles.contains(name)) => {
+        println("gen sub: " + name)
+        Some(genChildrenRef(name, s))
+      }
       case _ => None
     }
   }
@@ -184,10 +187,11 @@ trait ScalaFxmlTranslator { self: ScalaFxmlElement =>
   // Clean up!!!
   def content(sub:Seq[(String,Seq[Element])]):Seq[Option[Tree]] = {
     if(sub.size > 0) {
-      sub.map{_ match {
+      sub.map{s =>/*_ match {
         case ("children", e) => Some(genChildrensRef(e.map(_.name)))
-        case _ => None
-      }}
+        case _ => None*/
+        subElement(s._1, s._2.map(_.name))
+      /*}*/}
     } else {
       Nil
     }
@@ -223,7 +227,16 @@ trait ScalaFxmlTranslator { self: ScalaFxmlElement =>
     )
   }
 
-  def elementToString(pkg:String, elem:Element):String = treeToString(borderPlate(pkg, elem))
+  def elementToString(pkg:String, elem:Element):String = {
+    """import scalafx.application.JFXApp
+import scalafx.application.JFXApp.PrimaryStage
+import scalafx.geometry.{Pos, Orientation}
+import scalafx.scene.control.{Label, TextArea, Button, SplitPane}
+import scalafx.scene.layout.{Priority, BorderPane, AnchorPane}
+import scalafx.scene.Scene
+""" + treeToString(borderPlate(pkg, elem))
+  }
+
 }
 
 object ScalaFxml extends ScalaFxmlReader with ScalaFxmlTranslator with ScalaFxmlElement {}

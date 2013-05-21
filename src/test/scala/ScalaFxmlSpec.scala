@@ -106,10 +106,11 @@ class ScalaFxmlTranslatorSpec2 extends org.specs2.Specification with ScalaFxmlTr
   p^
   "Sub-elements" ^
   "children" ! checkSubElements("children", Seq("A", "B")) ^
-  "top" ! checkSubElement("top", "c")  ^
+  "top" ! checkSubElement("top", "theTop")  ^
   "bottom" ! checkSubElement("bottom", "B")  ^
   "left" ! checkSubElement("left", "h")  ^
   "right" ! checkSubElement("right", "i")  ^
+  "right" ! checkSubElement("center", "c")  ^
   end
 
 
@@ -148,8 +149,11 @@ class ScalaFxmlTranslatorSpec2 extends org.specs2.Specification with ScalaFxmlTr
   }
 
   def checkSubElement(name:String, sub:String) = {
-    subElement(name, Seq(sub)).map(treeToString(_)) must be_==(
-      Some(REF(name) := REF(sub):Tree).map(treeToString(_)))
+    val ist = subElement(name, Seq(sub)).map(treeToString(_))
+    val soll = Some(REF(name) := REF(sub): Tree).map(treeToString(_))
+    println("checkSubElement: ist: " + ist + ", soll: " + soll)
+    ist must be_==(
+      soll)
   }
 
   //def checkAlignmentPane
