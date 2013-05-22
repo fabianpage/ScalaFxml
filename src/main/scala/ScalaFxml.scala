@@ -14,7 +14,7 @@ trait ScalaFxmlElement {
 
   def genId(attributes:Seq[(String, String)]):String = {
     val tmp: Option[(String, String)] = attributes.find{case (id, _) => id == "fx:id"}
-    val tmp2: (String, String) = tmp.getOrElse(("", "gen_"+ /* klass + */"_" + scala.util.Random.alphanumeric ))
+    val tmp2: (String, String) = tmp.getOrElse(("", "generatedId"+ scala.util.Random.alphanumeric.take(10).mkString ))
     println("tmp2: " + tmp2)
     tmp2._2
   }
@@ -250,7 +250,7 @@ object ScalaFxmlApp extends App{
 <?import javafx.scene.paint.*?>
 <AnchorPane fx:id="rootPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" AnchorPane.bottomAnchor="0.0" prefHeight="400.0" prefWidth="600.0" xmlns:fx="http://javafx.com/fxml">
   <children>
-    <BorderPane fx:id="theBorderStuff" prefHeight="400.0" prefWidth="600.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+    <BorderPane prefHeight="400.0" prefWidth="600.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
       <center>
         <Button fx:id="theButton" mnemonicParsing="false" text="Button" />
       </center>
