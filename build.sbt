@@ -38,7 +38,7 @@ testOptions in Test += Tests.Argument("junitxml", "html", "console", "markup")
 
 publishMavenStyle := true
 
-publishTo := Some(Resolver.file("file", new File("../maven-repo/snapshots")))
+publishTo := Some(Resolver.file("file", new File("../maven-repo/maven-repo/snapshots")))
 
 publishArtifact in Test := false
 
