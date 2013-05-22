@@ -4,113 +4,39 @@ import com.github.nuriaion.{ScalaFxmlElement, ScalaFxmlTranslator, ScalaFxmlRead
 import org.jcp.xml.dsig.internal.dom.DOMTransform
 import org.specs2.matcher.MatchResult
 
-/**
- * Created with IntelliJ IDEA.
- * User: fabian
- * Date: 26.03.13
- * Time: 15:49
- * To change this template use File | Settings | File Templates.
- */
-/**class ScalaFxmlReaderSpec
-  extends org.scalatest.FunSpec
-  with org.scalatest.matchers.ShouldMatchers
-  with ScalaFxmlReader{
-  describe("A ScalaFxmlReader") {
-    it("should parse a flat xml") {
-      val fxml = <AnchorPane ></AnchorPane>
-      xmlToElement(fxml) should equal(Element("AnchorPane", Nil, Nil))
-    }
-    it("should parse some properties") {
-      val fxml = <AnchorPane prefHeight="400.0" prefWidth="600.0"></AnchorPane>
-      xmlToElement(fxml) should equal(
-        Element("AnchorPane",
-          Seq(
-            ("prefHeight","400.0"),
-            ("prefWidth", "600.0")), Nil))
-    }
-    it("should parse a child") {
-      val fxml = <AnchorPane><children><BorderPane></BorderPane></children></AnchorPane>
-      xmlToElement(fxml) should equal(Element("AnchorPane", Nil,
-        Seq(("children",Seq(Element("BorderPane", Nil, Nil))))))
-    }
-  }
-}   */
-
-/*class ScalaFxmlTranslatorSpec extends FunSpec with ShouldMatchers with ScalaFxmlTranslator {
-  import treehugger.forest._
-  import definitions._
-  import treehuggerDSL._
-
-  describe("A Translator") {
-    it("should parse some double properties") {
-      attr(Nil) should equal(Nil)
-      (attr(Seq(("prefHeight", "412.3"))):Seq[Tree]) should equal(
-        (Seq(REF("prefHeight") := LIT(412.3)):Seq[Tree])
-      )
-    }
-  }
-}               */
-
-
-class ScalaFxmlReaderSpecS
-  extends org.specs2.Specification
-  with ScalaFxmlReader with ScalaFxmlElement { def is =
-  "A ScalaFxmlReader" ^
-  "should parse a flat xml" ! checkFlatXml ^
-  "should parse some properties" ! parseSomeProperties ^
-  "should parse a child" ! parseAChild ^
-  end
-
-  def checkFlatXml = {
-    val fxml = <AnchorPane ></AnchorPane>
-    xmlToElement(fxml) === (Element("AnchorPane", Nil, Nil))
-  }
-
-  def parseSomeProperties =  {
-    val fxml = <AnchorPane prefHeight="400.0" prefWidth="600.0"></AnchorPane>
-    xmlToElement(fxml) === (
-      Element("AnchorPane",
-        Seq(
-          ("prefHeight","400.0"),
-          ("prefWidth", "600.0")), Nil))
-  }
-
-  def parseAChild = {
-    val fxml = <AnchorPane><children><BorderPane></BorderPane></children></AnchorPane>
-    xmlToElement(fxml) === (Element("AnchorPane", Nil,
-      Seq(("children",Seq(Element("BorderPane", Nil, Nil))))))
-  }
-}
-
-
-class ScalaFxmlTranslatorSpec2 extends org.specs2.Specification with ScalaFxmlTranslator with ScalaFxmlElement { def is =
-  "This is a specification to check the ScalaFxmlTranslator" ^
+class ScalaFxmlSpec extends org.specs2.Specification with ScalaFxmlTranslator with ScalaFxmlElement { def is =
+  "subElement calls" ^
+  "top" ! checkGenerateSubElementLink("top", "theTopElement") ^
+  "bottom" ! checkGenerateSubElementLink("bottom", "theTopElement") ^
+  "left" ! checkGenerateSubElementLink("left", "theTopElement") ^
+  "right" ! checkGenerateSubElementLink("right", "theTopElement") ^
+  "center" ! checkGenerateSubElementLink("center", "theTopElement") ^
+  "children" ! checkGenerateSubElementLink("children", List("someElement"), "content") ^
+  "childrens" ! checkGenerateSubElementLink("children", List("someElement", "someOtherElement"), "content") ^
+  "no call" ! checkGenerateNoSubElement("huhu") ^
   p^
-  "Double properties" ^
-  "height" ! checkProperty("prefHeight", 412.3) ^
-  "width" ! checkProperty("prefWidth", 300.0) ^
-  "-Infinity" ! checkNoProprty("minHeight", "-Infinity") ^
-  "-Infinity" ! checkNoProprty("minWidth", "-Infinity") ^
+  "attribute generation" ^
+  br^
+  "Double" ^
+  "height" ! checkAttribute("prefHeight", 412.3) ^
+  "width" ! checkAttribute("prefWidth", 300.0) ^
+  "-Infinity" ! checkNoAttribute("minHeight", "-Infinity") ^
+  "-Infinity" ! checkNoAttribute("minWidth", "-Infinity") ^
+  br^ bt^ "String" ^
+  "text" ! checkAttribute("text", "someText") ^
+  "style" ! checkAttribute("style", "someStyle") ^
+  "fx:id" ! checkNoAttribute("fx:id", "someId") ^
+  br^ bt^  "Boolean" ^
+  "mnemonicParsing" ! checkAttribute("mnemonicParsing", false) ^
+  endp^
   p^
-  "String properties" ^
-  "id" ! checkChangingProperty("fx:id", "id", "theButton") ^
-  "text" ! checkProperty("text", "someText") ^
-  "style" ! checkProperty("style", "someStyle") ^
+  "Single Element Parser" ^
+  "a Button" ! checkButton ^
+  "a Border Pane" ! checkBorderPane ^
+  endp^
   p^
-  "Boolean properties" ^
-  "mnemonicParsing" ! checkProperty("mnemonicParsing", false) ^
-  p^
-  "Panes" ^
-  "AnchorPane" ! checkDoublePane("AnchorPane", "bottomAnchor", 0.0) ^
-  "BorderPane" ! checkAlignmentPane("BorderPane", "alignment", "CENTER") ^
-  p^
-  "Sub-elements" ^
-  "children" ! checkSubElements("children", Seq("A", "B")) ^
-  "top" ! checkSubElement("top", "theTop")  ^
-  "bottom" ! checkSubElement("bottom", "B")  ^
-  "left" ! checkSubElement("left", "h")  ^
-  "right" ! checkSubElement("right", "i")  ^
-  "right" ! checkSubElement("center", "c")  ^
+  "Element Tree Parser" ^
+  "a Pane with a Button" ! elementTree ^
   end
 
 
@@ -119,54 +45,98 @@ class ScalaFxmlTranslatorSpec2 extends org.specs2.Specification with ScalaFxmlTr
   import definitions._
   import treehuggerDSL._
 
-  def checkNoProprty[T](id:String, value:T) = {
+  def checkNoAttribute[T](id:String, value:T) = {
     (attr(Seq((id, value.toString))):Seq[Tree]).map(treeToString(_)) === Nil
   }
 
-  def checkProperty[T](id:String, value:T) = {
-    (attr(Seq((id, value.toString))):Seq[Tree]).map(treeToString(_)) ===
-      (Seq(REF(id) := LIT(value)):Seq[Tree]).map(treeToString(_))
+  def checkAttribute[T](id:String, value:T) = {
+
+    val attribute:Tree = REF(id) := LIT(value)
+    genAttribute(Seq((id, value.toString))).map(treeToString(_)) === Seq(attribute).map(treeToString(_))
   }
 
-  def checkChangingProperty[T](oldId:String, newId:String, value:T) = {
-    (attr(Seq((oldId, value.toString))):Seq[Tree]).map(treeToString(_)) ===
-      (Seq(REF(newId) := LIT(value)):Seq[Tree]).map(treeToString(_))
+  def checkGenerateNoSubElement(fxmlPane:String) = {
+    val subElements = Seq(
+      (fxmlPane,
+        Seq(Element("", "", Nil, Nil))))
+    genSubElementCalls(subElements) === Nil
   }
 
-  def checkDoublePane(klass:String, function:String, value:Double) = {
-    (attr(Seq((klass + "." + function, value.toString))):Seq[Tree]).map(treeToString(_)) ===
-      (Seq(REF(klass) DOT("set" + function.head.toUpper + function.tail) APPLY (THIS, LIT(value))):Seq[Tree]).map(treeToString(_))
+  def checkGenerateSubElementLink(fxmlPane: String, elementId:Seq[String], scalaPane: String): MatchResult[Any] = {
+    val subElements = Seq(
+      (fxmlPane,
+        elementId.map(Element("someKlassz",
+          _,
+          Nil,
+          Nil))))
+    val res:Seq[Tree] = genSubElementCalls(subElements)
+    val soll:Seq[Tree] = Seq((REF(scalaPane) := LIST(elementId.map(REF(_)))))
+    soll.map(treeToString(_)) === res.map(treeToString(_))
   }
 
-  def checkAlignmentPane(klass:String, function:String, value:String) = {
-    (attr(Seq((klass + "." + function, value))):Seq[Tree]).map(treeToString(_)) ===
-      (Seq(REF(klass) DOT("set" + function.head.toUpper + function.tail) APPLY (THIS, REF("Pos") DOT(value) )):Seq[Tree]).map(treeToString(_))
+  def checkGenerateSubElementLink(fxmlPane: String, elementId:String): MatchResult[Any] = checkGenerateSubElementLink(fxmlPane, elementId, fxmlPane)
+  def checkGenerateSubElementLink(fxmlPane: String, elementId:String, scalaPane: String): MatchResult[Any] = {
+    val subElements = Seq(
+      (fxmlPane,
+        Seq(Element("someKlassz",
+                    elementId,
+                    Nil,
+                    Nil))))
+    val res:Seq[Tree] = genSubElementCalls(subElements)
+    val soll:Seq[Tree] = Seq((REF(scalaPane) := REF(elementId)))
+    soll.map(treeToString(_)) === res.map(treeToString(_))
   }
 
-  def checkSubElements(name:String, sub:Seq[String]) = {
-    subElement(name, sub).map(treeToString(_)) must be_==(
-      Some(REF("content") := LIST(sub.map(REF(_))):Tree).map(treeToString(_)))
+  val button = Element("Button", "theButton", Seq(("text", "someText")), Nil)
+  val borderPane = Element("BorderPane", "aBorderPane",
+    Seq(("prefHeight", "400.0"), ("style", "-fx-background-color: black")),
+    Seq(("center", Seq(button))))
+
+  def checkButton = {
+    val code:Tree =
+      VAL("theButton") := NEW(ANONDEF("Button") := BLOCK(
+        REF("text") := LIT("someText")
+      ))
+    treeToString(generateElementCode(button)) === treeToString(code)
   }
 
-  def checkSubElement(name:String, sub:String) = {
-    val ist = subElement(name, Seq(sub)).map(treeToString(_))
-    val soll = Some(REF(name) := REF(sub): Tree).map(treeToString(_))
-    println("checkSubElement: ist: " + ist + ", soll: " + soll)
-    ist must be_==(
-      soll)
+  def checkBorderPane = {
+    val code:Tree =
+      VAL("aBorderPane") := NEW(ANONDEF("BorderPane") := BLOCK(
+        REF("center") := REF("theButton"),
+        REF("prefHeight") := LIT(400.0),
+        REF("style") := LIT("-fx-background-color: black")
+      ))
+    treeToString(generateElementCode(borderPane)) === treeToString(code)
   }
 
-  //def checkAlignmentPane
-
-/*  def heightProperty = {
-    /*(attr(Seq(("prefHeight", "412.3"))):Seq[Tree]).map(treeToString(_)) ===
-    (Seq(REF("prefHeight") := LIT(412.3)):Seq[Tree]).map(treeToString(_))*/
-    checkProperty("prefHeight", 412.3)
+  def elementTree = {
+    val code:Tree =
+      PACKAGE("FxmlFiles") := BLOCK (
+        TRAITDEF("simple") := BLOCK (
+          IMPORT("scalafx.application.JFXApp"),
+          IMPORT("scalafx.application.JFXApp.PrimaryStage"),
+          IMPORT("scalafx.geometry.Orientation"),
+          IMPORT("scalafx.geometry.Pos"),
+          IMPORT("scalafx.scene.control.Label"),
+          IMPORT("scalafx.scene.control.TextArea"),
+          IMPORT("scalafx.scene.control.Button"),
+          IMPORT("scalafx.scene.control.SplitPane"),
+          IMPORT("scalafx.scene.layout.Priority"),
+          IMPORT("scalafx.scene.layout.BorderPane"),
+          IMPORT("scalafx.scene.layout.AnchorPane"),
+          IMPORT("scalafx.scene.Scene"),
+          VAL("aBorderPane") := NEW(ANONDEF("BorderPane") := BLOCK(
+            REF("center") := REF("theButton"),
+            REF("prefHeight") := LIT(400.0),
+            REF("style") := LIT("-fx-background-color: black")
+          )),
+          VAL("theButton") := NEW(ANONDEF("Button") := BLOCK(
+            REF("text") := LIT("someText")
+          ))
+        )
+      )
+    treeToString(generateCode("FxmlFiles", "simple", imports, borderPane)) === treeToString(code)
   }
-
-  def widthProperty = {
-    /*(attr(Seq(("prefWidth", "300")))).map(treeToString(_)) ====
-      (Seq(REF("prefWidth") := LIT(300.0))).map(treeToString(_))*/
-    checkProperty("prefWidht", 412.3)
-  }*/
 }
+
