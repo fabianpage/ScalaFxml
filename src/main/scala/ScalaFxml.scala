@@ -203,7 +203,7 @@ trait ScalaFxmlTranslator { self: ScalaFxmlElement =>
 
   def generateElementTreeCode(elements:Seq[Element]):Seq[Tree] = {
     elements match {
-      case e :: xs => generateElementCode(e) +: generateElementTreeCode(xs ++ e.subElements.map(_._2).flatten)
+      case e :: xs => generateElementTreeCode(e.subElements.map(_._2).flatten ++ xs) :+ generateElementCode(e)
       case _ => Nil
     }
   }

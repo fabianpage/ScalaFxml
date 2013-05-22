@@ -126,13 +126,13 @@ class ScalaFxmlSpec extends org.specs2.Specification with ScalaFxmlTranslator wi
           IMPORT("scalafx.scene.layout.BorderPane"),
           IMPORT("scalafx.scene.layout.AnchorPane"),
           IMPORT("scalafx.scene.Scene"),
+          VAL("theButton") := NEW(ANONDEF("Button") := BLOCK(
+            REF("text") := LIT("someText")
+          )),
           VAL("aBorderPane") := NEW(ANONDEF("BorderPane") := BLOCK(
             REF("center") := REF("theButton"),
             REF("prefHeight") := LIT(400.0),
             REF("style") := LIT("-fx-background-color: black")
-          )),
-          VAL("theButton") := NEW(ANONDEF("Button") := BLOCK(
-            REF("text") := LIT("someText")
           ))
         )
       )
