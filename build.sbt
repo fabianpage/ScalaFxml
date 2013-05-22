@@ -16,7 +16,9 @@ organization := "com.github.nuriaion"
 resolvers ++= Seq(
     "Typesafe Releases" at "http://repo.typesafe.com/typesafe/releases",
     "Sonatype Snapshots" at "http://oss.sonatype.org/content/repositories/snapshots",
-    "Sonatype Releases" at "http://oss.sonatype.org/content/repositories/releases"
+    "Sonatype Releases" at "http://oss.sonatype.org/content/repositories/releases",
+    "Nuriaion Snapshots" at "https://github.com/Nuriaion/maven-repo/raw/master/snapshots",
+    "Nuriaion Releases" at "https://github.com/Nuriaion/maven-repo/raw/master/releases"
 )
 
 libraryDependencies ++= Seq(
@@ -34,15 +36,14 @@ libraryDependencies ++= Seq(
 
 testOptions in Test += Tests.Argument("junitxml", "html", "console", "markup")
 
-//publishArtifact in Compile := true
+publishMavenStyle := true
 
-publishTo <<= (version) { version: String =>
-   val scalasbt = "http://repo.scala-sbt.org/scalasbt/"
-   val (name, url) = if (version.contains("-SNAPSHOT"))
-     ("sbt-plugin-snapshots", scalasbt+"sbt-plugin-snapshots")
-   else
-     ("sbt-plugin-releases", scalasbt+"sbt-plugin-releases")
-   Some(Resolver.url(name, new URL(url))(Resolver.ivyStylePatterns))
-}
+publishTo := Some(Resolver.file("file", new File("../maven-repo/snapshots")))
 
-publishMavenStyle := false
+publishArtifact in Test := false
+
+pomIncludeRepository := { _ => false }
+
+licenses := Seq("BSD-style" -> url("http://www.opensource.org/licenses/bsd-license.php"))
+
+homepage := Some(url("https://github.com/Nuriaion/ScalaFxml-sbt"))
