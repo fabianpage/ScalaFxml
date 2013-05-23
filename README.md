@@ -30,4 +30,11 @@ Example at: https://github.com/Nuriaion/ScalaFxml-example
 
 This is a very early prototype witch probably only works with the fxml file of the exmaple!
 
+ToDo
+----
+
+- use reflection on scalafx/javafx insted of pattern matching
+- parse immport statements of fxml file
+- ...
+
 [![Build Status](https://travis-ci.org/Nuriaion/ScalaFxml.png?branch=master)](https://travis-ci.org/Nuriaion/ScalaFxml)
