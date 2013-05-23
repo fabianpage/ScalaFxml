@@ -15,7 +15,7 @@ trait ScalaFxmlElement {
   def genId(attributes:Seq[(String, String)]):String = {
     attributes.find {
       case (id, _) => id == "fx:id"
-    }.getOrElse(("", "generatedId" + scala.util.Random.alphanumeric.take(10).mkString))._2
+    }.getOrElse(("", "generatedId_" + scala.util.Random.alphanumeric.take(10).mkString))._2
   }
 
   object Element {
@@ -222,6 +222,7 @@ trait ScalaFxmlTranslator { self: ScalaFxmlElement =>
   }
 
   def generateScalaSource(pkg:String, klass:String, imports:Seq[String], e:Element): String = {
+    println("generate pkg: " + pkg + ", trait: " + klass)
     treeToString(generateCode(pkg, klass, imports, e))
   }
 
