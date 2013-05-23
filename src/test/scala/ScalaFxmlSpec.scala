@@ -36,6 +36,9 @@ class ScalaFxmlSpec extends org.specs2.Specification with ScalaFxmlTranslator wi
   br^ bt^  "Boolean" ^
   "mnemonicParsing" ! checkAttribute("mnemonicParsing", false) ^
   "wrapText" ! checkAttribute("wrapText", true) ^
+  br^ bt^ "Priority" ^
+  "hgrow" ! checkPriorityAttribute("hgrow", "SOMETIMES") ^
+  "vgrow" ! checkPriorityAttribute("vgrow", "SOMETIMES") ^
   endp^
   p^
   "Single Element Parser" ^
@@ -62,6 +65,11 @@ class ScalaFxmlSpec extends org.specs2.Specification with ScalaFxmlTranslator wi
 
     val attribute:Tree = REF(id) := LIT(value)
     genAttribute(Seq((id, value.toString))).map(treeToString(_)) === Seq(attribute).map(treeToString(_))
+  }
+
+  def checkPriorityAttribute(id:String, value:String) = {
+    val code:Tree = REF(id) := (REF("Priority") DOT value)
+    genAttribute(Seq((id, value))).map(treeToString(_)) === Seq(code).map(treeToString(_))
   }
 
   def checkGenerateNoSubElement(fxmlPane:String) = {

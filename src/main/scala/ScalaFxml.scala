@@ -107,6 +107,10 @@ trait ScalaFxmlTranslator { self: ScalaFxmlElement =>
     (REF(klass) DOT(generateSetter(function)) APPLY (THIS, REF("Pos") DOT(value)))
   }
 
+  def genPriorityAttribute(id:String, value:String):Tree = {
+    (REF(id) := REF("Priority") DOT value)
+  }
+
   abstract class NaNa {
     def genUnapply(names:List[String]):(String => Option[String]) = { s =>
       if(checkString(s, names)) Some(s) else None
@@ -135,6 +139,10 @@ trait ScalaFxmlTranslator { self: ScalaFxmlElement =>
       if(l.contains("pane") && l.contains(".") && l.contains("alignment")) Some(x) else None
     }             */
     def unapply(x: String):Option[String] = genUnapply(List("Alignment"))(x)
+  }
+
+  object PriorityPane extends NaNa {
+    def unapply(x: String):Option[String] = genUnapply(List("grow"))(x)
   }
 
   object DoublePane extends NaNa{
@@ -190,6 +198,7 @@ trait ScalaFxmlTranslator { self: ScalaFxmlElement =>
         case (IntPane(id), I(i)) => Some(genPaneCall(id, i))
         case (DoubleName(id), D(d)) => Some(genAttribute(id, d))
         case (BoolName(id), Bool(b)) => Some(genAttribute(id, b))
+        case (PriorityPane(id), s) => Some(genPriorityAttribute(id, s))
         case (StringName(id), s) => Some(genAttribute(id, s))
         case _ => None
       }
