@@ -28,4 +28,14 @@ Gui.scala:
 
 Example at: https://github.com/Nuriaion/ScalaFxml-example
 
+This is a very early prototype witch probably only works with the fxml file of the exmaple!
+
+ToDo
+----
+
+- use reflection on scalafx/javafx insted of pattern matching
+- parse immport statements of fxml file
+- how should the code for a button look? (onAction?)
+- ...
+
 [![Build Status](https://travis-ci.org/Nuriaion/ScalaFxml.png?branch=master)](https://travis-ci.org/Nuriaion/ScalaFxml)
