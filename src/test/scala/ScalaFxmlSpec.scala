@@ -11,6 +11,12 @@ class ScalaFxmlSpec extends org.specs2.Specification with ScalaFxmlTranslator wi
   "left" ! checkGenerateSubElementLink("left", "theTopElement") ^
   "right" ! checkGenerateSubElementLink("right", "theTopElement") ^
   "center" ! checkGenerateSubElementLink("center", "theTopElement") ^
+  "columns" ! checkGenerateSubElementLink("columns", List("someColumns"), "items") ^
+  "menus" ! checkGenerateSubElementLink("menus", List("someColumns")) ^
+  "expandedPane" ! checkGenerateSubElementLink("expandedPane", "asdf") ^
+  "panes" ! checkGenerateSubElementLink("panes", List("someColumns")) ^
+  "items" ! checkGenerateSubElementLink("items", List("someColumns")) ^
+  "content" ! checkGenerateSubElementLink("content", "someColumns") ^
   "children" ! checkGenerateSubElementLink("children", List("someElement"), "content") ^
   "childrens" ! checkGenerateSubElementLink("children", List("someElement", "someOtherElement"), "content") ^
   "no call" ! checkGenerateNoSubElement("huhu") ^
@@ -29,6 +35,7 @@ class ScalaFxmlSpec extends org.specs2.Specification with ScalaFxmlTranslator wi
   "fx:id" ! checkNoAttribute("fx:id", "someId") ^
   br^ bt^  "Boolean" ^
   "mnemonicParsing" ! checkAttribute("mnemonicParsing", false) ^
+  "wrapText" ! checkAttribute("wrapText", true) ^
   endp^
   p^
   "Single Element Parser" ^
@@ -64,6 +71,8 @@ class ScalaFxmlSpec extends org.specs2.Specification with ScalaFxmlTranslator wi
     genSubElementCalls(subElements) === Nil
   }
 
+  def checkGenerateSubElementLink(fxmlPane: String, elementId:Seq[String]): MatchResult[Any] =
+    checkGenerateSubElementLink(fxmlPane, elementId, fxmlPane)
   def checkGenerateSubElementLink(fxmlPane: String, elementId:Seq[String], scalaPane: String): MatchResult[Any] = {
     val subElements = Seq(
       (fxmlPane,

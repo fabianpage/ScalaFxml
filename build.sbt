@@ -5,7 +5,7 @@ scalaVersion := "2.9.2"
 //    "-deprecation"
 //)
 
-version :="0.1.1-SNAPSHOT"
+version :="0.1.2-SNAPSHOT"
 
 parallelExecution := true
 

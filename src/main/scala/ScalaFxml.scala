@@ -18,13 +18,25 @@ trait ScalaFxmlElement {
     }.getOrElse(("", "generatedId_" + scala.util.Random.alphanumeric.take(10).mkString))._2
   }
 
+  //sealed abstract class Element
   object Element {
     def apply(klass: String,
               attributes:Seq[(String, String)],
-              subElements:Seq[(String, Seq[Element])]):Element =
-      Element(klass, genId(attributes), attributes, subElements)
+              subElements:Seq[(String, Seq[Element])]):Element = {
+      val ri = if (klass == "reference") {
+        println("reference!" + attributes)
+        val res: String = attributes.find {
+          case (id, _) => id == "source"
+        }.get._2
+        res
+      } else genId(attributes)
+      Element(klass, ri, attributes, subElements)
+    }
   }
-  case class Element(klass: String, id:String, attributes:Seq[(String, String)], subElements:Seq[(String, Seq[Element])])
+  case class Element(klass: String, id:String, attributes:Seq[(String, String)], subElements:Seq[(String, Seq[Element])]){
+    println("klass: " + klass + ", attr: " + attributes)
+  } //extends Element
+  //case class ReferenceElement(id: String)
 }
 
 trait ScalaFxmlReader { self: ScalaFxmlElement =>
@@ -71,8 +83,11 @@ trait ScalaFxmlTranslator { self: ScalaFxmlElement =>
 
   def genAttribute[T](id:String, value: T): Tree = REF(id) := LIT(value)
   def genPaneCall[T](id:String, value: T): Tree = {
+    println("genpane: " + id + ", val: " + value)
     val (klass, function) = splitKlassFunction(id)
-    (REF(klass) DOT(generateSetter(function)) APPLY (THIS, LIT(value)))
+    val tmp = REF(klass) DOT (generateSetter(function)) APPLY(THIS, LIT(value))
+    println("gen: " + tmp)
+    tmp
   }
 
 
@@ -107,30 +122,49 @@ trait ScalaFxmlTranslator { self: ScalaFxmlElement =>
   }
 
   object BoolName extends NaNa{
-    def unapply(x: String):Option[String] = genUnapply(List("mnemonicParsing"))(x)
+    def unapply(x: String):Option[String] = genUnapply(List("mnemonicParsing", "wrapText"))(x)
   }
 
   object StringName extends NaNa{
     def unapply(x: String):Option[String] = genUnapply(List("text", "style"))(x)
   }
 
-  object AlignmentPane {
-    def unapply(x: String):Option[String] = {
+  object AlignmentPane extends NaNa {
+    /*def unapply(x: String):Option[String] = {
       val l = x.toLowerCase
       if(l.contains("pane") && l.contains(".") && l.contains("alignment")) Some(x) else None
-    }
+    }             */
+    def unapply(x: String):Option[String] = genUnapply(List("Alignment"))(x)
   }
 
-  object DoublePane {
-    def unapply(x: String):Option[String] = {
-      val l = x.toLowerCase
-      if(l.contains("pane") && l.contains(".")) Some(x) else None
-    }
+  object DoublePane extends NaNa{
+    val doubleNames = List("AnchorPane")
+    /*def unapply(x: String):Option[String] = {
+      //val l = x.toLowerCase
+      //if(l.contains("pane") && l.contains(".")) Some(x) else None
+      if(checkString(x, doubleNames)) Some(x) else None
+    } */
+    def unapply(x: String):Option[String] = genUnapply(doubleNames)(x)
+  }
+
+  object IntPane extends NaNa{
+    val doubleNames = List("GridPane")
+    /*def unapply(x: String):Option[String] = {
+      //val l = x.toLowerCase
+      //if(l.contains("pane") && l.contains(".")) Some(x) else None
+      if(checkString(x, doubleNames)) Some(x) else None
+    } */
+    def unapply(x: String):Option[String] = genUnapply(doubleNames)(x)
   }
 
   object D {
     def unapply(x: String):Option[Double] =
       if(!x.toLowerCase.contains("inf")) parseDouble(x).toOption else None
+  }
+
+  object I {
+    def unapply(x: String):Option[Int] =
+      if(!x.toLowerCase.contains("inf")) parseInt(x).toOption else None
   }
 
   object Bool {
@@ -149,26 +183,32 @@ trait ScalaFxmlTranslator { self: ScalaFxmlElement =>
   def attr(s:Seq[(String, String)]): Seq[Tree] = {
 
     def translate(identifier:String, value: String):Option[Tree] = {
-      (identifier, value) match {
-        case (DoubleName(id), D(d)) => Some(genAttribute(id, d))
-        case (StringName(id), s) => Some(genAttribute(id, s))
-        case (BoolName(id), Bool(b))  => Some(genAttribute(id, b))
+
+      val tmp = (identifier, value) match {
         case (DoublePane(id), D(d)) => Some(genPaneCall(id, d))
         case (AlignmentPane(id), AlignmentAttr(a)) => Some(genAlignmentPaneCall(id, a))
+        case (IntPane(id), I(i)) => Some(genPaneCall(id, i))
+        case (DoubleName(id), D(d)) => Some(genAttribute(id, d))
+        case (BoolName(id), Bool(b)) => Some(genAttribute(id, b))
+        case (StringName(id), s) => Some(genAttribute(id, s))
         case _ => None
       }
-
+      println("translate: " + identifier + ", val: " + value + ", gen: " + tmp)
+      tmp
     }
     s.map(e => translate(e._1, e._2)).flatten
   }
 
   object ListSubElement {
-    val names: Map[String, String] = Map("children" -> "content")
+    val names: Map[String, String] =
+      Map("children" -> "content", "columns" -> "items", "menus" -> "menus", "items" -> "items", "panes" -> "panes")
     def unapply(x: String):Option[String] = names.get(x)
   }
 
+
   object SingleSubElement {
-    val singles = List("top", "bottom", "left", "right", "center")
+
+    val singles = List("top", "bottom", "left", "right", "center", "expandedPane", "content")
     val singlesMap = singles.zip(singles).toMap
     def unapply(x: String):Option[String] = singlesMap.get(x)
   }
@@ -206,7 +246,7 @@ trait ScalaFxmlTranslator { self: ScalaFxmlElement =>
   }
 
   def generateElementTreeCode(elements:Seq[Element]):Seq[Tree] = {
-    elements match {
+    elements.filter(_.klass != "reference") match {
       case e :: xs => generateElementTreeCode(e.subElements.map(_._2).flatten ++ xs) :+ generateElementCode(e)
       case _ => Nil
     }
