@@ -20,6 +20,7 @@ class ScalaFxmlSpec extends org.specs2.Specification with ScalaFxmlTranslator wi
   "Double" ^
   "height" ! checkAttribute("prefHeight", 412.3) ^
   "width" ! checkAttribute("prefWidth", 300.0) ^
+  "layoutX" ! checkAttribute("layoutX", 33.5) ^
   "-Infinity" ! checkNoAttribute("minHeight", "-Infinity") ^
   "-Infinity" ! checkNoAttribute("minWidth", "-Infinity") ^
   br^ bt^ "String" ^
@@ -37,6 +38,7 @@ class ScalaFxmlSpec extends org.specs2.Specification with ScalaFxmlTranslator wi
   p^
   "Element Tree Parser" ^
   "a Pane with a Button" ! elementTree ^
+  endp^
   end
 
 
@@ -126,6 +128,7 @@ class ScalaFxmlSpec extends org.specs2.Specification with ScalaFxmlTranslator wi
           IMPORT("scalafx.scene.layout.BorderPane"),
           IMPORT("scalafx.scene.layout.AnchorPane"),
           IMPORT("scalafx.scene.Scene"),
+          IMPORT("scalafx.geometry._"),
           VAL("theButton") := NEW(ANONDEF("Button") := BLOCK(
             REF("text") := LIT("someText")
           )),
@@ -138,5 +141,50 @@ class ScalaFxmlSpec extends org.specs2.Specification with ScalaFxmlTranslator wi
       )
     treeToString(generateCode("FxmlFiles", "simple", imports, borderPane)) === treeToString(code)
   }
+
 }
 
+
+class ScalaFxmlReaderSpec extends org.specs2.Specification with ScalaFxmlReader with ScalaFxmlElement { def is =
+  "Parse import statements" ! parseImportStatements ^
+  "Parse fxml import statements" ! parseFxmlSource ^
+  end
+
+
+  def parseImportStatements = {
+    val fxml = """<?import java.lang.*?>
+                 |<?import java.util.*?>
+                 |<?import javafx.scene.control.*?>
+                 |<?import javafx.scene.layout.*?>
+                 |<?import javafx.scene.paint.*?>""".stripMargin
+
+    parseImports(fxml) === List("scalafx.scene.control._",
+      "scalafx.scene.layout._",
+      "scalafx.scene.paint._")
+  }
+
+  def parseFxmlSource = {
+    val fxml = """<?xml version="1.0" encoding="UTF-8"?>
+                         |<?import java.lang.*?>
+                         |<?import java.util.*?>
+                         |<?import javafx.scene.control.*?>
+                         |<?import javafx.scene.layout.*?>
+                         |<?import javafx.scene.paint.*?>
+                         |<AnchorPane fx:id="rootPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" AnchorPane.bottomAnchor="0.0" prefHeight="400.0" prefWidth="600.0" xmlns:fx="http://javafx.com/fxml">
+                         |  <children>
+                         |    <BorderPane prefHeight="400.0" prefWidth="600.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                         |      <center>
+                         |        <Button fx:id="theButton" mnemonicParsing="false" text="Button" />
+                         |      </center>
+                         |      <top>
+                         |        <Label fx:id="theTop" text="Top!" BorderPane.alignment="CENTER" />
+                         |      </top>
+                         |    </BorderPane>
+                         |  </children>
+                         |</AnchorPane>""".stripMargin
+
+    parseImports(fxml) === List("scalafx.scene.control._",
+      "scalafx.scene.layout._",
+      "scalafx.scene.paint._")
+  }
+}

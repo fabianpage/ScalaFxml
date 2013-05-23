@@ -13,10 +13,9 @@ package com.github.nuriaion
 trait ScalaFxmlElement {
 
   def genId(attributes:Seq[(String, String)]):String = {
-    val tmp: Option[(String, String)] = attributes.find{case (id, _) => id == "fx:id"}
-    val tmp2: (String, String) = tmp.getOrElse(("", "generatedId"+ scala.util.Random.alphanumeric.take(10).mkString ))
-    println("tmp2: " + tmp2)
-    tmp2._2
+    attributes.find {
+      case (id, _) => id == "fx:id"
+    }.getOrElse(("", "generatedId" + scala.util.Random.alphanumeric.take(10).mkString))._2
   }
 
   object Element {
@@ -32,9 +31,7 @@ trait ScalaFxmlReader { self: ScalaFxmlElement =>
   import xml._
 
   def parse(fxml:String):xml.Elem = {
-    val x: xml.Elem = scala.xml.XML.loadString(fxml)
-    println("xml: " + x)
-    x
+    scala.xml.XML.loadString(fxml)
   }
 
   def xmlToElement(s:xml.Node):Element = {
@@ -54,6 +51,13 @@ trait ScalaFxmlReader { self: ScalaFxmlElement =>
     }
 
     Element(label, attr, subElements)
+  }
+
+  def parseImports(fxml:String):Seq[String] = {
+    val importRegexPattern = """<\?import javafx\..+\.\*\?>""".r
+    importRegexPattern.findAllIn(fxml).toList.map{m =>
+      """scalafx.""" + m.stripPrefix( """<?import javafx.""").stripSuffix( """.*?>""") + """._"""
+    }
   }
 }
 
@@ -99,7 +103,7 @@ trait ScalaFxmlTranslator { self: ScalaFxmlElement =>
   }
 
   object DoubleName extends NaNa{
-    def unapply(x: String):Option[String] = genUnapply(List("height", "width"))(x)
+    def unapply(x: String):Option[String] = genUnapply(List("height", "width", "X", "Y"))(x)
   }
 
   object BoolName extends NaNa{
@@ -212,12 +216,12 @@ trait ScalaFxmlTranslator { self: ScalaFxmlElement =>
   def generateCode(pkg: String, klass:String, imports:Seq[String], e:Element):Tree = {
     PACKAGE(pkg) := BLOCK (
       TRAITDEF(klass) := BLOCK (
-        imports.map(IMPORT(_)) ++ generateElementTreeCode(Seq(e))
+        ((imports ++ Seq("scalafx.geometry._")).distinct).map(IMPORT(_)) ++ generateElementTreeCode(Seq(e))
       )
     )
   }
 
-  def generateScalaSource(pkg:String, klass:String, imports:List[String], e:Element): String = {
+  def generateScalaSource(pkg:String, klass:String, imports:Seq[String], e:Element): String = {
     treeToString(generateCode(pkg, klass, imports, e))
   }
 
@@ -243,24 +247,23 @@ object ScalaFxmlApp extends App{
   import ScalaFxml._
 
   val fxml: String = """<?xml version="1.0" encoding="UTF-8"?>
-<?import java.lang.*?>
-<?import java.util.*?>
-<?import javafx.scene.control.*?>
-<?import javafx.scene.layout.*?>
-<?import javafx.scene.paint.*?>
-<AnchorPane fx:id="rootPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" AnchorPane.bottomAnchor="0.0" prefHeight="400.0" prefWidth="600.0" xmlns:fx="http://javafx.com/fxml">
-  <children>
-    <BorderPane prefHeight="400.0" prefWidth="600.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-      <center>
-        <Button fx:id="theButton" mnemonicParsing="false" text="Button" />
-      </center>
-      <top>
-        <Label fx:id="theTop" text="Top!" BorderPane.alignment="CENTER" />
-      </top>
-    </BorderPane>
-  </children>
-</AnchorPane>
-                     """
+                       |<?import java.lang.*?>
+                       |<?import java.util.*?>
+                       |<?import javafx.scene.control.*?>
+                       |<?import javafx.scene.layout.*?>
+                       |<?import javafx.scene.paint.*?>
+                       |<AnchorPane fx:id="rootPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" AnchorPane.bottomAnchor="0.0" prefHeight="400.0" prefWidth="600.0" xmlns:fx="http://javafx.com/fxml">
+                       |  <children>
+                       |    <BorderPane prefHeight="400.0" prefWidth="600.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                       |      <center>
+                       |        <Button fx:id="theButton" mnemonicParsing="false" text="Button" />
+                       |      </center>
+                       |      <top>
+                       |        <Label fx:id="theTop" text="Top!" BorderPane.alignment="CENTER" />
+                       |      </top>
+                       |    </BorderPane>
+                       |  </children>
+                       |</AnchorPane>""".stripMargin
 
 
   val pars: xml.Elem = parse(fxml)
@@ -280,7 +283,7 @@ object ScalaFxmlApp extends App{
     "scalafx.scene.layout.AnchorPane",
     "scalafx.scene.Scene")
 
-  println(generateScalaSource("FxmlFiles", "simple", imports, sim))
+  println(generateScalaSource("FxmlFiles", "simple", parseImports(fxml), sim))
 
 
 
