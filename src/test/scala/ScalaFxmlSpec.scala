@@ -26,6 +26,10 @@ class ScalaFxmlSpec extends org.specs2.Specification with ScalaFxmlTranslator wi
   "Double" ^
   "height" ! checkAttribute("prefHeight", 412.3) ^
   "width" ! checkAttribute("prefWidth", 300.0) ^
+  "bottom" ! checkAttribute("bottom", 220.0) ^
+  "left" ! checkAttribute("left", 220.0) ^
+  "right" ! checkAttribute("right", 220.0) ^
+  "top" ! checkAttribute("top", 220.0) ^
   "layoutX" ! checkAttribute("layoutX", 33.5) ^
   "-Infinity" ! checkNoAttribute("minHeight", "-Infinity") ^
   "-Infinity" ! checkNoAttribute("minWidth", "-Infinity") ^
@@ -112,20 +116,29 @@ class ScalaFxmlSpec extends org.specs2.Specification with ScalaFxmlTranslator wi
     Seq(("center", Seq(button))))
 
   def checkButton = {
-    val code:Tree =
-      VAL("theButton") := NEW(ANONDEF("Button") := BLOCK(
+    val code:Seq[Tree] = Seq(
+      CLASSDEF("TheButton_Class") withParents("Button") := BLOCK(
         REF("text") := LIT("someText")
-      ))
+      ),
+      VAL("theButton") := NEW("TheButton_Class")
+    )
     treeToString(generateElementCode(button)) === treeToString(code)
   }
 
   def checkBorderPane = {
-    val code:Tree =
-      VAL("aBorderPane") := NEW(ANONDEF("BorderPane") := BLOCK(
+    val code:Seq[Tree] = Seq(
+      CLASSDEF("ABorderPane_Class") withParents("BorderPane") := BLOCK(
         REF("center") := REF("theButton"),
         REF("prefHeight") := LIT(400.0),
         REF("style") := LIT("-fx-background-color: black")
-      ))
+      ),
+      VAL("aBorderPane") := NEW("ABorderPane_Class")
+    )
+      /*VAL("aBorderPane") := NEW(ANONDEF("BorderPane") := BLOCK(
+        REF("center") := REF("theButton"),
+        REF("prefHeight") := LIT(400.0),
+        REF("style") := LIT("-fx-background-color: black")
+      ))*/
     treeToString(generateElementCode(borderPane)) === treeToString(code)
   }
 
@@ -146,14 +159,27 @@ class ScalaFxmlSpec extends org.specs2.Specification with ScalaFxmlTranslator wi
           IMPORT("scalafx.scene.layout.AnchorPane"),
           IMPORT("scalafx.scene.Scene"),
           IMPORT("scalafx.geometry._"),
-          VAL("theButton") := NEW(ANONDEF("Button") := BLOCK(
+          CLASSDEF("TheButton_Class") withParents("Button") := BLOCK(
             REF("text") := LIT("someText")
-          )),
-          VAL("aBorderPane") := NEW(ANONDEF("BorderPane") := BLOCK(
+          ),
+          /*CLASSDEF("TheButton_Class") withParents("Button") := BLOCK(
+            REF("text") := LIT("someText")
+          ),*/
+          VAL("theButton") := NEW("TheButton_Class"),
+          /*VAL("theButton") := NEW(ANONDEF("Button") := BLOCK(
+            REF("text") := LIT("someText")
+          )),*/
+          CLASSDEF("ABorderPane_Class") withParents("BorderPane") := BLOCK(
             REF("center") := REF("theButton"),
             REF("prefHeight") := LIT(400.0),
             REF("style") := LIT("-fx-background-color: black")
-          ))
+          ),
+          VAL("aBorderPane") := NEW("ABorderPane_Class")
+          /*VAL("aBorderPane") := NEW(ANONDEF("BorderPane") := BLOCK(
+            REF("center") := REF("theButton"),
+            REF("prefHeight") := LIT(400.0),
+            REF("style") := LIT("-fx-background-color: black")
+          ))*/
         )
       )
     treeToString(generateCode("FxmlFiles", "simple", imports, borderPane)) === treeToString(code)

@@ -24,7 +24,6 @@ trait ScalaFxmlElement {
               attributes:Seq[(String, String)],
               subElements:Seq[(String, Seq[Element])]):Element = {
       val ri = if (klass == "reference") {
-        println("reference!" + attributes)
         val res: String = attributes.find {
           case (id, _) => id == "source"
         }.get._2
@@ -34,7 +33,6 @@ trait ScalaFxmlElement {
     }
   }
   case class Element(klass: String, id:String, attributes:Seq[(String, String)], subElements:Seq[(String, Seq[Element])]){
-    println("klass: " + klass + ", attr: " + attributes)
   } //extends Element
   //case class ReferenceElement(id: String)
 }
@@ -83,11 +81,8 @@ trait ScalaFxmlTranslator { self: ScalaFxmlElement =>
 
   def genAttribute[T](id:String, value: T): Tree = REF(id) := LIT(value)
   def genPaneCall[T](id:String, value: T): Tree = {
-    println("genpane: " + id + ", val: " + value)
     val (klass, function) = splitKlassFunction(id)
-    val tmp = REF(klass) DOT (generateSetter(function)) APPLY(THIS, LIT(value))
-    println("gen: " + tmp)
-    tmp
+    REF(klass) DOT (generateSetter(function)) APPLY(THIS, LIT(value))
   }
 
 
@@ -122,7 +117,7 @@ trait ScalaFxmlTranslator { self: ScalaFxmlElement =>
   }
 
   object DoubleName extends NaNa{
-    def unapply(x: String):Option[String] = genUnapply(List("height", "width", "X", "Y"))(x)
+    def unapply(x: String):Option[String] = genUnapply(List("height", "width", "X", "Y", "bottom", "left", "right", "top"))(x)
   }
 
   object BoolName extends NaNa{
@@ -189,10 +184,8 @@ trait ScalaFxmlTranslator { self: ScalaFxmlElement =>
   // Good Solution?
   // Maybe some reflection on scalafx/javafx would be better?
   def attr(s:Seq[(String, String)]): Seq[Tree] = {
-
     def translate(identifier:String, value: String):Option[Tree] = {
-
-      val tmp = (identifier, value) match {
+      (identifier, value) match {
         case (DoublePane(id), D(d)) => Some(genPaneCall(id, d))
         case (AlignmentPane(id), AlignmentAttr(a)) => Some(genAlignmentPaneCall(id, a))
         case (IntPane(id), I(i)) => Some(genPaneCall(id, i))
@@ -202,8 +195,6 @@ trait ScalaFxmlTranslator { self: ScalaFxmlElement =>
         case (StringName(id), s) => Some(genAttribute(id, s))
         case _ => None
       }
-      println("translate: " + identifier + ", val: " + value + ", gen: " + tmp)
-      tmp
     }
     s.map(e => translate(e._1, e._2)).flatten
   }
@@ -248,15 +239,21 @@ trait ScalaFxmlTranslator { self: ScalaFxmlElement =>
     attr(attributes)
   }
 
-  def generateElementCode(e:Element):Tree = {
-    VAL(e.id) := NEW(ANONDEF(e.klass) := BLOCK(
+  def generateElementCode(e:Element):Seq[Tree]= {
+    val newKlass = e.id.capitalize + "_Class"
+    Seq(
+      CLASSDEF(newKlass) withParents(e.klass) := BLOCK(
+        genSubElementCalls(e.subElements) ++ genAttribute(e.attributes)
+      ),
+      VAL(e.id) := NEW(newKlass))
+    /*VAL(e.id) := NEW(ANONDEF(e.klass) := BLOCK(
       genSubElementCalls(e.subElements) ++ genAttribute(e.attributes)
-    ))
+    ))*/
   }
 
   def generateElementTreeCode(elements:Seq[Element]):Seq[Tree] = {
     elements.filter(_.klass != "reference") match {
-      case e :: xs => generateElementTreeCode(e.subElements.map(_._2).flatten ++ xs) :+ generateElementCode(e)
+      case e :: xs => generateElementTreeCode(e.subElements.map(_._2).flatten ++ xs) ++ generateElementCode(e)
       case _ => Nil
     }
   }
